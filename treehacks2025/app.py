@@ -47,39 +47,51 @@ class SpeedPrediction(BaseModel):
 # Load models and data here
 # TODO: Import your trained models from notebooks
 
-@app.post("/api/predict_route", response_model=Route)
+@app.post("/route", response_model=Route)
 async def predict_route(request: RouteRequest):
-    start_point = [request.start.lat, request.start.lon]
-    end_point = [request.end.lat, request.end.lon]
-    
-    # TODO: Implement route prediction using models from notebooks
-    # For now, return a dummy route
-    route = [
-        start_point,
-        [start_point[0] + (end_point[0] - start_point[0])/3, 
-         start_point[1] + (end_point[1] - start_point[1])/3],
-        [start_point[0] + 2*(end_point[0] - start_point[0])/3, 
-         start_point[1] + 2*(end_point[1] - start_point[1])/3],
-        end_point
-    ]
-    
-    return Route(
-        route=route,
-        eta="48 hours",  # TODO: Implement ETA prediction
-        distance=geodesic(start_point, end_point).nautical
-    )
+    """Predict optimal maritime route"""
+    try:
+        start_point = [request.start.lat, request.start.lon]
+        end_point = [request.end.lat, request.end.lon]
+        
+        # TODO: Implement route prediction using models from notebooks
+        # For now, return a dummy route
+        route = [
+            start_point,
+            [start_point[0] + (end_point[0] - start_point[0])/3, 
+             start_point[1] + (end_point[1] - start_point[1])/3],
+            [start_point[0] + 2*(end_point[0] - start_point[0])/3, 
+             start_point[1] + 2*(end_point[1] - start_point[1])/3],
+            end_point
+        ]
+        
+        return Route(
+            route=route,
+            eta="48 hours",  # TODO: Implement ETA prediction
+            distance=geodesic(start_point, end_point).nautical
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/traffic", response_model=TrafficData)
-async def get_traffic():
-    # TODO: Implement traffic visualization using data from notebooks
-    return TrafficData(traffic_density=[])
+@app.get("/traffic", response_model=TrafficData)
+async def get_traffic_data():
+    """Get current maritime traffic data"""
+    try:
+        # TODO: Implement traffic visualization using data from notebooks
+        return TrafficData(traffic_density=[])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/speed_prediction", response_model=SpeedPrediction)
-async def predict_speed(request: SpeedPredictionRequest):
-    location = [request.location.lat, request.location.lon]
-    
-    # TODO: Implement speed prediction using models from notebooks
-    return SpeedPrediction(predicted_speed=15.5)  # knots
+@app.post("/speed", response_model=SpeedPrediction)
+async def get_speed_prediction(request: SpeedPredictionRequest):
+    """Get speed prediction for a location"""
+    try:
+        location = [request.location.lat, request.location.lon]
+        
+        # TODO: Implement speed prediction using models from notebooks
+        return SpeedPrediction(predicted_speed=15.5)  # knots
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
