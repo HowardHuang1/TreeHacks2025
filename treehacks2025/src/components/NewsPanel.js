@@ -36,13 +36,11 @@ const NewsPanel = () => {
 
   if (loading) {
     return (
-      <div className="agent-panel">
+      <div className="agent-panel" style={{ height: '100%' }}>
         <h6 className="panel-title">Maritime News Feed</h6>
-        <div className="panel-content">
-          <div className="d-flex justify-content-center align-items-center w-100">
-            <div className="spinner-border text-light" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
+        <div className="panel-content" style={{ height: 'calc(100% - 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="spinner-border text-light" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
         </div>
       </div>
@@ -51,9 +49,9 @@ const NewsPanel = () => {
 
   if (error) {
     return (
-      <div className="agent-panel">
+      <div className="agent-panel" style={{ height: '100%' }}>
         <h6 className="panel-title">Maritime News Feed</h6>
-        <div className="panel-content">
+        <div className="panel-content" style={{ height: 'calc(100% - 48px)' }}>
           <div className="alert alert-danger">{error}</div>
         </div>
       </div>
@@ -61,9 +59,9 @@ const NewsPanel = () => {
   }
 
   return (
-    <div className="agent-panel">
+    <div className="agent-panel" style={{ height: '100%' }}>
       <h6 className="panel-title">Maritime News Feed</h6>
-      <div className="panel-content">
+      <div className="panel-content" style={{ height: 'calc(100% - 48px)', overflowY: 'auto' }}>
         <div className="news-container">
           {news.map((article) => (
             <div key={article.id} className="news-item">

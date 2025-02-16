@@ -179,103 +179,11 @@ function App() {
         </div>
       </nav>
 
-      <div className="row mt-3">
-        {/* Left Column */}
-        <div className="col-md-3">
-          {/* Route Planning Card */}
-          <div className="card mb-3">
-            <div className="card-body">
-              <h5 className="card-title">Route Planning</h5>
-              <form onSubmit={fetchRoute}>
-                <div className="mb-3">
-                  <label className="form-label">Start Point</label>
-                  <div className="input-group mb-2">
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={startPoint.lat}
-                      onChange={(e) => setStartPoint({ ...startPoint, lat: parseFloat(e.target.value) })}
-                      placeholder="Latitude"
-                      step="any"
-                    />
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={startPoint.lon}
-                      onChange={(e) => setStartPoint({ ...startPoint, lon: parseFloat(e.target.value) })}
-                      placeholder="Longitude"
-                      step="any"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">End Point</label>
-                  <div className="input-group mb-2">
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={endPoint.lat}
-                      onChange={(e) => setEndPoint({ ...endPoint, lat: parseFloat(e.target.value) })}
-                      placeholder="Latitude"
-                      step="any"
-                    />
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={endPoint.lon}
-                      onChange={(e) => setEndPoint({ ...endPoint, lon: parseFloat(e.target.value) })}
-                      placeholder="Longitude"
-                      step="any"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Season</label>
-                  <select 
-                    className="form-select"
-                    value={season}
-                    onChange={(e) => setSeason(e.target.value)}
-                  >
-                    <option value="summer">Summer</option>
-                    <option value="winter">Winter</option>
-                  </select>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn btn-primary w-100"
-                  disabled={loading}
-                >
-                  {loading ? 'Calculating...' : 'Calculate Route'}
-                </button>
-              </form>
-
-              {error && (
-                <div className="alert alert-danger mt-3" role="alert">
-                  {error}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Route Info Card */}
-          {route && (
-            <div className="card mb-3">
-              <div className="card-body">
-                <h5 className="card-title">Route Information</h5>
-                <p>Distance: {route.distance.toFixed(2)} nautical miles</p>
-                <p>ETA: {route.eta}</p>
-                <p>Predicted Speed: {speed ? `${speed.toFixed(1)} knots` : '-'}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Weather and Traffic Panels in Left Column */}
-          <WeatherPanel />
-          <div className="mt-3">
-            <TrafficPanel />
+      <div className="row mt-3" style={{ height: 'calc(100vh - 80px)' }}>
+        {/* Left Column - Maritime News Only */}
+        <div className="col-md-3" style={{ height: '100%' }}>
+          <div style={{ height: '100%', overflowY: 'hidden' }}>
+            <NewsPanel />
           </div>
         </div>
 
@@ -330,7 +238,7 @@ function App() {
             </div>
           </div>
 
-          {/* Geopolitical, Prediction, and News Panels in Bottom Row */}
+          {/* Bottom Row Panels */}
           <div className="row mt-3">
             <div className="col-md-4">
               <GeopoliticalPanel />
@@ -339,7 +247,7 @@ function App() {
               <PredictionPanel />
             </div>
             <div className="col-md-4">
-              <NewsPanel />
+              <WeatherPanel />
             </div>
           </div>
         </div>
