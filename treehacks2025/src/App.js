@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import NewsPanel from './components/NewsPanel';
 import WeatherPanel from './components/WeatherPanel';
+import GeopoliticalPanel from './components/GeopoliticalPanel';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -36,25 +37,25 @@ L.Icon.Default.mergeOptions({
 //   </div>
 // );
 
-const GeopoliticalPanel = ({ data }) => (
-  <div className="agent-panel">
-    <h5 className="panel-title">Geopolitical Risk Agent</h5>
-    <div className="panel-content">
-      <div className="chart-container">
-        <div className="risk-indicator high"></div>
-        <div className="risk-zones">
-          <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(255,0,0,0.2)' }}></div>
-          <div className="risk-zone" style={{ height: '40%', backgroundColor: 'rgba(255,165,0,0.2)' }}></div>
-          <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(0,255,0,0.2)' }}></div>
-        </div>
-      </div>
-      <div className="panel-info">
-        <p>Current Risk Level: High</p>
-        <p>Active Conflict Zones: 3</p>
-      </div>
-    </div>
-  </div>
-);
+// const GeopoliticalPanel = ({ data }) => (
+//   <div className="agent-panel">
+//     <h5 className="panel-title">Geopolitical Risk Agent</h5>
+//     <div className="panel-content">
+//       <div className="chart-container">
+//         <div className="risk-indicator high"></div>
+//         <div className="risk-zones">
+//           <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(255,0,0,0.2)' }}></div>
+//           <div className="risk-zone" style={{ height: '40%', backgroundColor: 'rgba(255,165,0,0.2)' }}></div>
+//           <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(0,255,0,0.2)' }}></div>
+//         </div>
+//       </div>
+//       <div className="panel-info">
+//         <p>Current Risk Level: High</p>
+//         <p>Active Conflict Zones: 3</p>
+//       </div>
+//     </div>
+//   </div>
+// );
 
 const TrafficPanel = ({ data }) => (
   <div className="agent-panel">
@@ -265,7 +266,7 @@ function App() {
           {/* Bottom Row Panels */}
           <div className="row mt-3">
             <div className="col-md-4">
-              <GeopoliticalPanel />
+              <GeopoliticalPanel center={mapCenter}/>
             </div>
             <div className="col-md-4">
               <PredictionPanel />

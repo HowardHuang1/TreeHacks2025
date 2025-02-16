@@ -10,6 +10,7 @@ import uvicorn
 from app import app as main_app
 from news_agent import app as news_app
 from weather import app as weather_app
+from langchain_agent import app as langchain_app
 
 # Create a combined FastAPI app
 app = FastAPI()
@@ -27,6 +28,7 @@ app.add_middleware(
 app.mount("/api", main_app)
 app.mount("/news", news_app)
 app.mount("/weather",weather_app)
+app.mount("/langchain_agent", langchain_app)
 
 if __name__ == "__main__":
     uvicorn.run("run:app", host="0.0.0.0", port=8000, reload=True)
