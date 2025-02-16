@@ -71,7 +71,10 @@ const GeopoliticalPanel = ({ center }) => {
     <h5 className="panel-title">Geopolitical Risk Agent</h5>
     <div className="panel-content">
       <div className="chart-container">
-        <div className={`risk-indicator ${riskIndicatorClass}`}>{riskText}</div>
+        <div 
+          className={`risk-indicator ${riskIndicatorClass}`} 
+          style={{ top: `${(1 - risk) * 100}%` }}>
+        </div>
         <div className="risk-zones">
           <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(255,0,0,0.2)' }}></div>
           <div className="risk-zone" style={{ height: '40%', backgroundColor: 'rgba(255,165,0,0.2)' }}></div>
