@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import { MapContainer, useMap, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import NewsPanel from './components/NewsPanel';
+import WeatherPanel from './components/WeatherPanel';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,25 +16,25 @@ L.Icon.Default.mergeOptions({
 });
 
 // Agent Panel Components
-const WeatherPanel = ({ data }) => (
-  <div className="agent-panel">
-    <h5 className="panel-title">Weather Analysis Agent</h5>
-    <div className="panel-content">
-      <div className="chart-container">
-        {/* Placeholder for weather impact chart */}
-        <div className="placeholder-chart">
-          <div className="chart-line" style={{ height: '60%' }}></div>
-          <div className="chart-line" style={{ height: '80%' }}></div>
-          <div className="chart-line" style={{ height: '40%' }}></div>
-        </div>
-      </div>
-      <div className="panel-info">
-        <p>Weather Impact Score: 7.5/10</p>
-        <p>Major weather systems affecting routes: 2</p>
-      </div>
-    </div>
-  </div>
-);
+// const WeatherPanel = ({ data }) => (
+//   <div className="agent-panel">
+//     <h5 className="panel-title">Weather Analysis Agent</h5>
+//     <div className="panel-content">
+//       <div className="chart-container">
+//         {/* Placeholder for weather impact chart */}
+//         <div className="placeholder-chart">
+//           <div className="chart-line" style={{ height: '60%' }}></div>
+//           <div className="chart-line" style={{ height: '80%' }}></div>
+//           <div className="chart-line" style={{ height: '40%' }}></div>
+//         </div>
+//       </div>
+//       <div className="panel-info">
+//         <p>Weather Impact Score: 7.5/10</p>
+//         <p>Major weather systems affecting routes: 2</p>
+//       </div>
+//     </div>
+//   </div>
+// );
 
 const GeopoliticalPanel = ({ data }) => (
   <div className="agent-panel">
@@ -92,6 +93,25 @@ const PredictionPanel = ({ data }) => (
   </div>
 );
 
+
+function CenterCoordinates({ setCenter }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const updateCenter = () => {
+      const center = map.getCenter();
+      setCenter({ lat: center.lat, lon: center.lng });
+    };
+    map.on('moveend', updateCenter);
+    updateCenter();
+    return () => {
+      map.off('moveend', updateCenter);
+    };
+  }, [map, setCenter]);
+
+  return null;
+}
+
 function App() {
   const [startPoint, setStartPoint] = useState({ lat: 37.7749, lon: -122.4194 });
   const [endPoint, setEndPoint] = useState({ lat: 34.0522, lon: -118.2437 });
@@ -101,6 +121,8 @@ function App() {
   const [error, setError] = useState(null);
   const [speed, setSpeed] = useState(null);
   const [trafficData, setTrafficData] = useState([]); // Initialize as empty array
+  const [mapCenter, setMapCenter] = useState({ lat: 37.7749, lon: -122.4194 });
+
 
   const fetchRoute = async (e) => {
     e.preventDefault();
@@ -202,6 +224,8 @@ function App() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
                 
+                <CenterCoordinates setCenter={setMapCenter} />
+                
                 {route && (
                   <Polyline
                     positions={route.route}
@@ -247,7 +271,7 @@ function App() {
               <PredictionPanel />
             </div>
             <div className="col-md-4">
-              <WeatherPanel />
+              <WeatherPanel center={mapCenter}/>
             </div>
           </div>
         </div>
