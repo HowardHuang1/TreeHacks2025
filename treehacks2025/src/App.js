@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, useMap, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,7 +8,7 @@ import NewsPanel from './components/NewsPanel';
 import WeatherPanel from './components/WeatherPanel';
 import GeopoliticalPanel from './components/GeopoliticalPanel';
 
-// Fix Leaflet marker icon issue
+// Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -16,84 +16,36 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// Agent Panel Components
-// const WeatherPanel = ({ data }) => (
-//   <div className="agent-panel">
-//     <h5 className="panel-title">Weather Analysis Agent</h5>
-//     <div className="panel-content">
-//       <div className="chart-container">
-//         {/* Placeholder for weather impact chart */}
-//         <div className="placeholder-chart">
-//           <div className="chart-line" style={{ height: '60%' }}></div>
-//           <div className="chart-line" style={{ height: '80%' }}></div>
-//           <div className="chart-line" style={{ height: '40%' }}></div>
-//         </div>
-//       </div>
-//       <div className="panel-info">
-//         <p>Weather Impact Score: 7.5/10</p>
-//         <p>Major weather systems affecting routes: 2</p>
-//       </div>
-//     </div>
-//   </div>
-// );
+// Create SVG icons for ships and ports
+const shipIconSvg = `
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 2L4 16H28L16 2Z" fill="#3388ff"/>
+  <circle cx="16" cy="16" r="6" fill="#3388ff"/>
+</svg>`;
 
-// const GeopoliticalPanel = ({ data }) => (
-//   <div className="agent-panel">
-//     <h5 className="panel-title">Geopolitical Risk Agent</h5>
-//     <div className="panel-content">
-//       <div className="chart-container">
-//         <div className="risk-indicator high"></div>
-//         <div className="risk-zones">
-//           <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(255,0,0,0.2)' }}></div>
-//           <div className="risk-zone" style={{ height: '40%', backgroundColor: 'rgba(255,165,0,0.2)' }}></div>
-//           <div className="risk-zone" style={{ height: '30%', backgroundColor: 'rgba(0,255,0,0.2)' }}></div>
-//         </div>
-//       </div>
-//       <div className="panel-info">
-//         <p>Current Risk Level: High</p>
-//         <p>Active Conflict Zones: 3</p>
-//       </div>
-//     </div>
-//   </div>
-// );
+const portIconSvg = `
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="12" r="10" fill="#ff3333"/>
+  <circle cx="12" cy="12" r="6" fill="white"/>
+</svg>`;
 
-const TrafficPanel = ({ data }) => (
-  <div className="agent-panel">
-    <h5 className="panel-title">Maritime Traffic Agent</h5>
-    <div className="panel-content">
-      <div className="chart-container">
-        <div className="traffic-bars">
-          {[60, 80, 40, 90, 70, 50].map((height, i) => (
-            <div key={i} className="traffic-bar" style={{ height: `${height}%` }}></div>
-          ))}
-        </div>
-      </div>
-      <div className="panel-info">
-        <p>Active Vessels: 1,247</p>
-        <p>Congestion Level: Moderate</p>
-      </div>
-    </div>
-  </div>
-);
+// Convert SVG to data URL
+const svgToDataUrl = (svg) => `data:image/svg+xml;base64,${btoa(svg)}`;
 
-const PredictionPanel = ({ data }) => (
-  <div className="agent-panel">
-    <h5 className="panel-title">Route Prediction Agent</h5>
-    <div className="panel-content">
-      <div className="chart-container">
-        <div className="prediction-graph">
-          <div className="prediction-line"></div>
-          <div className="confidence-interval"></div>
-        </div>
-      </div>
-      <div className="panel-info">
-        <p>Optimal Route Confidence: 85%</p>
-        <p>Alternative Routes: 3</p>
-      </div>
-    </div>
-  </div>
-);
+// Custom icons for ships and ports
+const shipIcon = new L.Icon({
+  iconUrl: svgToDataUrl(shipIconSvg),
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16],
+});
 
+const portIcon = new L.Icon({
+  iconUrl: svgToDataUrl(portIconSvg),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
 
 function CenterCoordinates({ setCenter }) {
   const map = useMap();
@@ -121,78 +73,106 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [speed, setSpeed] = useState(null);
-  const [trafficData, setTrafficData] = useState([]); // Initialize as empty array
-  const [mapCenter, setMapCenter] = useState({ lat: 37.7749, lon: -122.4194 });
+  const [trafficData, setTrafficData] = useState([]);
+  const [mapCenter, setMapCenter] = useState({ lat: 27.0000, lon: 45.0000 }); // Centered between Mediterranean and Arabian Sea
+  const [shipRoutes, setShipRoutes] = useState(null);
+  const [selectedShip, setSelectedShip] = useState(null);
 
-
-  const fetchRoute = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+  // Fetch ship routes
+  const fetchShipRoutes = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/route', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          start: startPoint,
-          end: endPoint,
-          season: season
-        })
-      });
-
+      const response = await fetch('http://localhost:8000/api/ship-routes');
       if (!response.ok) {
-        throw new Error('Failed to fetch route');
+        throw new Error('Failed to fetch ship routes');
       }
-
       const data = await response.json();
-      setRoute(data);
-      
-      // Fetch speed prediction
-      const speedResponse = await fetch('http://localhost:8000/api/speed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          location: startPoint,
-          time: new Date().toISOString()
-        })
-      });
+      console.log('Fetched ship routes:', data); // Add logging to debug
+      setShipRoutes(data);
+    } catch (error) {
+      console.error('Error fetching ship routes:', error);
+    }
+  }, []);
 
-      if (speedResponse.ok) {
-        const speedData = await speedResponse.json();
-        setSpeed(speedData.predicted_speed);
+  useEffect(() => {
+    fetchShipRoutes();
+    const interval = setInterval(fetchShipRoutes, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [fetchShipRoutes]);
+
+  // Group route points by ship
+  const getShipRoutes = () => {
+    if (!shipRoutes?.routes) return {};
+    
+    const routes = {};
+    const sortedRoutes = [...shipRoutes.routes].sort((a, b) => 
+      a.start_time.localeCompare(b.start_time)
+    );
+
+    sortedRoutes.forEach(point => {
+      if (!routes[point.mmsi]) {
+        routes[point.mmsi] = [];
       }
+      routes[point.mmsi].push([point.lat, point.lon, point.speed]);
+    });
+    return routes;
+  };
 
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  // Get speed color based on speed value
+  const getSpeedColor = (speed) => {
+    // Speed ranges (in knots)
+    const ranges = {
+      slow: 8,      // Below 8 knots
+      medium: 12,   // Below 12 knots
+      fast: 15,     // Below 15 knots
+      // Above 15 knots is very fast
+    };
+
+    if (speed < ranges.slow) {
+      return '#4575b4'; // Blue for slow
+    } else if (speed < ranges.medium) {
+      return '#74add1'; // Light blue for medium-slow
+    } else if (speed < ranges.fast) {
+      return '#f46d43'; // Orange for medium-fast
+    } else {
+      return '#d73027'; // Red for fast
     }
   };
 
-  // Fetch traffic data on component mount
-  useEffect(() => {
-    const fetchTraffic = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/traffic');
-        if (response.ok) {
-          const data = await response.json();
-          setTrafficData(data.traffic_density || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch traffic data:', err);
-      }
-    };
+  // Get line weight based on ship type
+  const getLineWeight = (mmsi) => {
+    const ship = shipRoutes?.ships?.[mmsi];
+    return ship?.includes('COASTAL') ? 2 : 3;
+  };
 
-    fetchTraffic();
-    // Refresh traffic data every 5 minutes
-    const interval = setInterval(fetchTraffic, 300000);
-    return () => clearInterval(interval);
-  }, []);
+  // Create route segments with colors based on speed
+  const getRouteSegments = (route) => {
+    const segments = [];
+    for (let i = 0; i < route.length - 1; i++) {
+      const [lat1, lon1, speed1] = route[i];
+      const [lat2, lon2, speed2] = route[i + 1];
+      const avgSpeed = (speed1 + speed2) / 2;
+      segments.push({
+        positions: [[lat1, lon1], [lat2, lon2]],
+        color: getSpeedColor(avgSpeed),
+        speed: avgSpeed
+      });
+    }
+    return segments;
+  };
+
+  // Get current ship positions
+  const getCurrentShipPositions = () => {
+    if (!shipRoutes?.routes || !shipRoutes?.ships) return [];
+    
+    const positions = new Map();
+    shipRoutes.routes.forEach(point => {
+      positions.set(point.mmsi, {
+        ...point,
+        shipName: shipRoutes.ships[point.mmsi]
+      });
+    });
+    return Array.from(positions.values());
+  };
 
   return (
     <div className="container-fluid dashboard">
@@ -216,8 +196,8 @@ function App() {
           <div className="card map-card">
             <div className="card-body">
               <MapContainer
-                center={[37.7749, -122.4194]}
-                zoom={5}
+                center={[mapCenter.lat, mapCenter.lon]}
+                zoom={5}  // Zoomed out to show the broader area
                 style={{ height: '500px', width: '100%' }}
               >
                 <TileLayer
@@ -226,7 +206,66 @@ function App() {
                 />
                 
                 <CenterCoordinates setCenter={setMapCenter} />
-                
+
+                {/* Render Ports */}
+                {shipRoutes?.ports && Object.entries(shipRoutes.ports).map(([name, coords]) => (
+                  <Marker
+                    key={name}
+                    position={[coords.lat, coords.lon]}
+                    icon={portIcon}
+                  >
+                    <Popup>
+                      <strong>{name}</strong>
+                      <br />
+                      Position: {coords.lat.toFixed(4)}°N, {coords.lon.toFixed(4)}°E
+                    </Popup>
+                  </Marker>
+                ))}
+
+                {/* Render Ship Routes */}
+                {Object.entries(getShipRoutes()).map(([mmsi, route]) => {
+                  const segments = getRouteSegments(route);
+                  return segments.map((segment, index) => (
+                    <Polyline
+                      key={`${mmsi}-${index}`}
+                      positions={segment.positions}
+                      color={segment.color}
+                      weight={getLineWeight(mmsi)}
+                      opacity={selectedShip === mmsi ? 1 : 0.6}
+                    >
+                      <Popup>
+                        <strong>{shipRoutes.ships[mmsi]}</strong>
+                        <br />
+                        Speed: {segment.speed.toFixed(1)} knots
+                      </Popup>
+                    </Polyline>
+                  ));
+                })}
+
+                {/* Render Ships */}
+                {getCurrentShipPositions().map((ship) => (
+                  <Marker
+                    key={ship.mmsi}
+                    position={[ship.lat, ship.lon]}
+                    icon={shipIcon}
+                    eventHandlers={{
+                      click: () => setSelectedShip(ship.mmsi)
+                    }}
+                  >
+                    <Popup>
+                      <strong>{ship.shipName}</strong>
+                      <br />
+                      MMSI: {ship.mmsi}
+                      <br />
+                      Speed: {ship.speed.toFixed(1)} knots
+                      <br />
+                      Position: {ship.lat.toFixed(4)}°N, {ship.lon.toFixed(4)}°E
+                      <br />
+                      Last Update: {ship.start_time}
+                    </Popup>
+                  </Marker>
+                ))}
+
                 {route && (
                   <Polyline
                     positions={route.route}
@@ -235,13 +274,6 @@ function App() {
                     opacity={0.7}
                   />
                 )}
-
-                <Marker position={[startPoint.lat, startPoint.lon]}>
-                  <Popup>Start Point</Popup>
-                </Marker>
-                <Marker position={[endPoint.lat, endPoint.lon]}>
-                  <Popup>End Point</Popup>
-                </Marker>
 
                 {trafficData.map((row, i) =>
                   row.map(([lat, lon, density], j) => (
@@ -267,9 +299,6 @@ function App() {
           <div className="row mt-3">
             <div className="col-md-4">
               <GeopoliticalPanel center={mapCenter}/>
-            </div>
-            <div className="col-md-4">
-              <PredictionPanel />
             </div>
             <div className="col-md-4">
               <WeatherPanel center={mapCenter}/>
