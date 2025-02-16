@@ -7,6 +7,7 @@ import './App.css';
 import NewsPanel from './components/NewsPanel';
 import WeatherPanel from './components/WeatherPanel';
 import GeopoliticalPanel from './components/GeopoliticalPanel';
+import PathPlanningPanel from './components/PathPlanningPanel';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -302,6 +303,9 @@ function App() {
             </div>
             <div className="col-md-4">
               <WeatherPanel center={mapCenter}/>
+            </div>
+            <div className="col-md-4">
+              <PathPlanningPanel/> 
             </div>
           </div>
         </div>
