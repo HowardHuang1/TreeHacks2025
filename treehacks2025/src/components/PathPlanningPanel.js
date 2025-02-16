@@ -73,17 +73,17 @@ const PathPlanningPanel = () => {
     return (
       <div className="agent-panel" style={{ height: '100%' }}>
         <h5 className="panel-title">Path Planning Agent</h5>
-        <div className="panel-content">
-          <div className="dropdown-container">
-            <label htmlFor="ports">Select Ports:</label>
-            <select id="ports" multiple onChange={handleSelection} className="form-select">
+        <div className="panel-content" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <div className="dropdown-container" style={{ width: '100px' }}>
+            {/* <label htmlFor="ports" className="w-100 text-center">Select Ports:</label> */}
+            <select id="ports" multiple onChange={handleSelection} className="form-select w-100" style={{ height: '100px' }}>
               {ports.map((port, index) => (
                 <option key={index} value={port.name}>{port.name}</option>
               ))}
             </select>
           </div>
 
-          <button className="btn btn-primary mt-3" onClick={sendPortsToBackend}>Send Ports</button>
+          <button className="btn btn-primary mt-3 w-100" style={{ width: '80px' }} onClick={sendPortsToBackend}>Close</button>
         </div>
       </div>
     );

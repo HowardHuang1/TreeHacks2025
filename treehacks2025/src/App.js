@@ -293,6 +293,10 @@ function App() {
                   ))
                 )}
               </MapContainer>
+
+              <div className="path-planning-popup position-absolute" style={{ top: 0, right: 0, width: 200, height: 150, backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '10px', padding: '10px', boxShadow: '0 6px 8px rgba(0,0,0,0.4)', zIndex: 1000 }}>
+                <PathPlanningPanel />
+              </div>
             </div>
           </div>
 
